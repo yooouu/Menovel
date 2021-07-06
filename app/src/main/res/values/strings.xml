@@ -1,3 +1,15 @@
 <resources>
-    <string name="app_name">Menovel</string>
+    <string name="app_name">미노벨</string>
+    <string name="cancel">취소</string>
+    <string name="confirm">확인</string>
+    <string name="dialog_permission_title">권한 확인</string>
+    <string name="dialog_permission_content">권한을 허용하지 않으면 앱을 사용할 수 없습니다</string>
+    <string name="dialog_permission_content_file">권한을 허용하지 않으면 파일을 불러올 수 없습니다</string>
+    <string name="app_finish">뒤로 버튼을 한번 더 누르면 종료됩니다</string>
+
+    <string name="not_network">페이지를 연결할 수 없습니다</string>
+    <string name="retry">다시시도</string>
+
+    <string name="channel_name">menovel</string>
+    <string name="channel_description">menovel push</string>
 </resources>
