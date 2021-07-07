@@ -3,6 +3,8 @@ package kr.co.menovel;
 import android.app.Application;
 import android.content.Context;
 
+import com.kakao.sdk.common.KakaoSdk;
+
 public class AppApplication extends Application {
     private static AppApplication instance;
     private static Context context;
@@ -13,6 +15,10 @@ public class AppApplication extends Application {
 
         instance = this;
         context = getApplicationContext();
+
+        // Kakao Init
+        // TODO Set kakao native key
+        KakaoSdk.init(this, "kakao_native_app_key");
     }
 
     @Override

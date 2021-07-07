@@ -14,9 +14,14 @@ public class AndroidBridge {
         this.webView = webView;
     }
 
-    // TODO Bridge method
+    // Bridge function
     @JavascriptInterface
     public void googleLogin() {
-//        act.
+        act.signIn();
+    }
+
+    @JavascriptInterface
+    public void kakaoLogin() {
+        act.kakaoLogin();
     }
 }

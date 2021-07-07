@@ -29,6 +29,34 @@
         <activity
             android:name=".MainActivity"
             android:screenOrientation="portrait"/>
+        <activity
+            android:name=".service.PushReceiveActivity"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"/>
+
+        <activity android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+
+                <data android:host="oauth"
+                    android:scheme="kakao"/>
+            </intent-filter>
+        </activity>
+
+<!--        <meta-data-->
+<!--            android:name="com.google.firebase.messaging.default_notification_icon"-->
+<!--            android:resource="@mipmap/app_icon" />-->
+<!--        <meta-data-->
+<!--            android:name="com.google.firebase.messaging.default_notification_color"-->
+<!--            android:resource="@color/colorAccent" />-->
+
+<!--        <service android:name=".service.FCMService">-->
+<!--            <intent-filter>-->
+<!--                <action android:name="com.google.firebase.MESSAGING_EVENT" />-->
+<!--            </intent-filter>-->
+<!--        </service>-->
     </application>
 
 </manifest>
