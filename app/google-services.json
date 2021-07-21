@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "434876704563",
+    "project_id": "menovel-25454",
+    "storage_bucket": "menovel-25454.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:434876704563:android:643c25134db871586b0046",
+        "android_client_info": {
+          "package_name": "kr.co.menovel"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "434876704563-p9uf8n7cm25iu444o63a87co12qskn47.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "kr.co.menovel",
+            "certificate_hash": "3483a03eb3b3f18e40d44d857cd00ae9fc83083a"
+          }
+        },
+        {
+          "client_id": "434876704563-ubs0asr0c100jtdttau69q0hnbvhela6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKcfw35u8RritaecgkpNzlTmYb-5oV4io"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "434876704563-ubs0asr0c100jtdttau69q0hnbvhela6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
