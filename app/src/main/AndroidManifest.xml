@@ -3,6 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="kr.co.menovel">
 
+    <queries>
+        <package android:name="com.kakao.talk" />
+        <package android:name="com.kakao.story"/>
+        <package android:name="com.nhn.android.band"/>
+    </queries>
+
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -28,22 +34,24 @@
         </activity>
         <activity
             android:name=".MainActivity"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:host="kakaostory"
+                    android:scheme="@string/kakao_scheme"/>
+            </intent-filter>
+        </activity>
         <activity
             android:name=".service.PushReceiveActivity"
             android:excludeFromRecents="true"
             android:launchMode="singleInstance"/>
 
-        <activity android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
-
-                <data android:host="oauth"
-                    android:scheme="kakao"/>
-            </intent-filter>
-        </activity>
+        <meta-data
+            android:name="com.kakao.sdk.AppKey"
+            android:value="@string/kakao_app_key" />
 
 <!--        <meta-data-->
 <!--            android:name="com.google.firebase.messaging.default_notification_icon"-->

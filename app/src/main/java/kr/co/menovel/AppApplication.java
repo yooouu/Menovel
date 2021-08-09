@@ -3,7 +3,9 @@ package kr.co.menovel;
 import android.app.Application;
 import android.content.Context;
 
-import com.kakao.sdk.common.KakaoSdk;
+import com.kakao.auth.IApplicationConfig;
+import com.kakao.auth.KakaoAdapter;
+import com.kakao.auth.KakaoSDK;
 
 public class AppApplication extends Application {
     private static AppApplication instance;
@@ -17,8 +19,17 @@ public class AppApplication extends Application {
         context = getApplicationContext();
 
         // Kakao Init
-        // TODO Set kakao native key
-        KakaoSdk.init(this, "kakao_native_app_key");
+        KakaoSDK.init(new KakaoAdapter() {
+            @Override
+            public IApplicationConfig getApplicationConfig() {
+                return new IApplicationConfig() {
+                    @Override
+                    public Context getApplicationContext() {
+                        return AppApplication.this;
+                    }
+                };
+            }
+        });
     }
 
     @Override

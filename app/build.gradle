@@ -41,8 +41,11 @@ dependencies {
     implementation 'com.google.firebase:firebase-auth:21.0.1'
     implementation 'com.google.android.gms:play-services-auth:19.0.0'
 
-    // Kakao Login
-    implementation 'com.kakao.sdk:v2-user:2.4.2'
+    // Kakao
+    implementation group: 'com.kakao.sdk', name: 'usermgmt', version: '1.30.6'    // 카카오 로그인
+    implementation group: 'com.kakao.sdk', name: 'kakaotalk', version: '1.30.6'    // 친구, 메시지(카카오톡)
+    implementation group: 'com.kakao.sdk', name: 'kakaostory', version: '1.30.6'   // 카카오스토리
+    implementation group: 'com.kakao.sdk', name: 'kakaolink', version: '1.30.6'    // 카카오링크
 
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
