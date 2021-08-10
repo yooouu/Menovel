@@ -1,5 +1,6 @@
 package kr.co.menovel;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
@@ -15,9 +16,21 @@ import android.os.Handler;
 import android.util.Base64;
 import android.util.Log;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
+
 import java.security.MessageDigest;
+import java.util.UUID;
+
+import kr.co.menovel.retrofit.RetrofitClient;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import static kr.co.menovel.util.CommonUtil.SPLASH_TIME;
+import static kr.co.menovel.util.CommonUtil.showToast;
 
 public class SplashActivity extends AppCompatActivity {
 
@@ -50,7 +63,32 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     private void startApp() {
-        handler.postDelayed(runnable, SPLASH_TIME);
+        FirebaseInstanceId.getInstance().getInstanceId()
+                .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                        if (!task.isSuccessful()) {
+                            return;
+                        }
+                        //TODO save fcm token data
+                        String fcmToken = task.getResult().getToken();
+                        String packageName = getApplicationContext().getPackageName();
+                        String appVersion = BuildConfig.VERSION_NAME;
+                        String uuid = UUID.randomUUID().toString();
+                        Log.e("fcm", "token: " + task.getResult().getToken() + " packageName: " + packageName + " version: " + appVersion + " uuid: " + uuid);
+                        RetrofitClient.getRetrofitApi().updateToken(fcmToken, packageName, appVersion, uuid).enqueue(new Callback<Void>() {
+                            @Override
+                            public void onResponse(Call<Void> call, Response<Void> response) {
+                                handler.postDelayed(runnable, SPLASH_TIME);
+                            }
+
+                            @Override
+                            public void onFailure(Call<Void> call, Throwable t) {
+                                showToast(R.string.toast_error_server);
+                            }
+                        });
+                    }
+                });
     }
 
     // For Kakao Login
