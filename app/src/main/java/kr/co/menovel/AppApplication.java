@@ -7,6 +7,8 @@ import com.kakao.auth.IApplicationConfig;
 import com.kakao.auth.KakaoAdapter;
 import com.kakao.auth.KakaoSDK;
 
+import kr.co.menovel.util.SharedPrefUtil;
+
 public class AppApplication extends Application {
     private static AppApplication instance;
     private static Context context;
@@ -17,6 +19,8 @@ public class AppApplication extends Application {
 
         instance = this;
         context = getApplicationContext();
+
+        SharedPrefUtil.init(this);
 
         // Kakao Init
         KakaoSDK.init(new KakaoAdapter() {

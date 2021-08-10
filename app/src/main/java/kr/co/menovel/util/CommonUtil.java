@@ -1,13 +1,19 @@
 package kr.co.menovel.util;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Handler;
+import android.telephony.TelephonyManager;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
+
+import java.util.UUID;
 
 import kr.co.menovel.AppApplication;
 import kr.co.menovel.R;
@@ -91,5 +97,21 @@ public class CommonUtil {
         } else {
             return PermissionCheck.PERMISSION_Y;
         }
+    }
+
+    // 디바이스 고유 아이디
+    @SuppressLint("HardwareIds")
+    public static String getDevicesUUID(Activity act) {
+        if (ActivityCompat.checkSelfPermission(act, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            return null;
+        }
+
+        String tmDevice, tmSerial, androidId;
+        TelephonyManager tm = (TelephonyManager) act.getSystemService(Context.TELEPHONY_SERVICE);
+        tmDevice = "" + tm.getDeviceId();
+        tmSerial = "" + tm.getSimSerialNumber();
+        androidId = "" + android.provider.Settings.Secure.getString(act.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+        UUID deviceUuid = new UUID(androidId.hashCode(), ((long)tmDevice.hashCode() << 32) | tmSerial.hashCode());
+        return deviceUuid.toString();
     }
 }

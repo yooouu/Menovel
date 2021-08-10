@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Base64;
 import android.util.Log;
+import android.view.View;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -24,7 +25,10 @@ import com.google.firebase.iid.InstanceIdResult;
 import java.security.MessageDigest;
 import java.util.UUID;
 
+import kr.co.menovel.component.ConfirmDialog;
 import kr.co.menovel.retrofit.RetrofitClient;
+import kr.co.menovel.util.CommonUtil;
+import kr.co.menovel.util.SharedPrefUtil;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -42,8 +46,6 @@ public class SplashActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
 
-        getKeyHash(this);
-
         runnable = new Runnable() {
             @Override
             public void run() {
@@ -53,7 +55,8 @@ public class SplashActivity extends AppCompatActivity {
             }
         };
 
-        startApp();
+        requestPermission();
+//        getKeyHash(this);
     }
 
     @Override
@@ -62,7 +65,62 @@ public class SplashActivity extends AppCompatActivity {
         finish();
     }
 
+    private void requestPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // 권한을 획득하지 않았다면
+            if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{
+                                Manifest.permission.READ_PHONE_STATE
+                        },
+                        123);
+            } else {
+                startApp();
+            }
+        }else{
+            startApp();
+        }
+    }
+
+    //권한체크 후
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        boolean isGranted = false;
+        for (int result : grantResults) {
+            if (!(isGranted = (result == PackageManager.PERMISSION_GRANTED))) {
+                break;
+            }
+        }
+        if (grantResults.length == 0 || !isGranted) {
+            final ConfirmDialog dialog = new ConfirmDialog(this);
+            dialog.setTitle(R.string.dialog_permission_title);
+            dialog.setContent(R.string.dialog_permission_content);
+            dialog.setBtnCancelText(R.string.finish);
+            dialog.setConfirmListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    requestPermission();
+                    dialog.dismiss();
+                }
+            });
+            dialog.setCancelListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    finishAffinity();
+                }
+            });
+            dialog.show();
+        } else {
+            startApp();
+        }
+    }
+
     private void startApp() {
+        String packageName = getApplicationContext().getPackageName();
+        String appVersion = BuildConfig.VERSION_NAME;
+        String uuid = CommonUtil.getDevicesUUID(this);
+
         FirebaseInstanceId.getInstance().getInstanceId()
                 .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
                     @Override
@@ -72,10 +130,9 @@ public class SplashActivity extends AppCompatActivity {
                         }
                         //TODO save fcm token data
                         String fcmToken = task.getResult().getToken();
-                        String packageName = getApplicationContext().getPackageName();
-                        String appVersion = BuildConfig.VERSION_NAME;
-                        String uuid = UUID.randomUUID().toString();
+                        SharedPrefUtil.putString(SharedPrefUtil.FCM_TOKEN, fcmToken);
                         Log.e("fcm", "token: " + task.getResult().getToken() + " packageName: " + packageName + " version: " + appVersion + " uuid: " + uuid);
+
                         RetrofitClient.getRetrofitApi().updateToken(fcmToken, packageName, appVersion, uuid).enqueue(new Callback<Void>() {
                             @Override
                             public void onResponse(Call<Void> call, Response<Void> response) {

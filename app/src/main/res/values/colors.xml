@@ -10,4 +10,9 @@
     <color name="colorDarkGray">#5D5D5D</color>
     <color name="colorLightGray">#DEDEDE</color>
     <color name="colorBackgroundDim">#66000000</color>
+    <color name="colorTextBlackNormal">#707070</color>
+    <color name="colorTextBlackPress">#B2707070</color>
+    <color name="colorTextBlueNormal">#1E46FF</color>
+    <color name="colorTextBluePress">#B21E46FF</color>
+    <color name="colorDivider">#D6DBDE</color>
 </resources>

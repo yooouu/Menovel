@@ -8,8 +8,10 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
+import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.LinearLayout;
@@ -49,8 +51,10 @@ import kr.co.menovel.kakao.KakaoLoginCallback;
 import kr.co.menovel.kakao.KakaoSessionCallback;
 import kr.co.menovel.kakao.KakaoStoryLink;
 import kr.co.menovel.util.AndroidBridge;
+import kr.co.menovel.util.SharedPrefUtil;
 
 import static kr.co.menovel.util.CommonUtil.finishApp;
+import static kr.co.menovel.util.CommonUtil.showToast;
 
 public class MainActivity extends AppCompatActivity implements KakaoLoginCallback {
 
@@ -215,7 +219,7 @@ private final String URL = "https://menovel.com/app_test.php";
         Intent signInIntent = googleSignInClient.getSignInIntent();
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
-    // TODO send google login data to webview
+
     private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
@@ -224,10 +228,12 @@ private final String URL = "https://menovel.com/app_test.php";
             String familyName = account.getFamilyName();
             String givenName = account.getGivenName();
             String displayName = account.getDisplayName();
-            Log.e("google login", "email: " + email + " familyName: " + familyName + " givenName: " + givenName + " displayName: " + displayName);
+
+            // Send google login data to webView
+            sendToSnsLoginData(displayName, email);
 
         } catch (ApiException e) {
-
+            showToast(R.string.toast_error_server);
         }
     }
 
@@ -242,10 +248,12 @@ private final String URL = "https://menovel.com/app_test.php";
     public void kakaoLoginSuccess(MeV2Response profile) {
         if (profile != null) {
             final String userId = String.valueOf(profile.getId());
+            final String name = profile.getKakaoAccount().getProfile().getNickname();
             final String email = String.valueOf(profile.getKakaoAccount().getEmail());
             Log.e("aaa", "카카오 로그인 아이디 : " + userId + " 카카오 로그인 이메일 : " + email);
 
-            //TODO send login data to webView
+            // send login data to webView
+            sendToSnsLoginData(name, email);
         }
     }
 
@@ -253,6 +261,11 @@ private final String URL = "https://menovel.com/app_test.php";
     public void kakaoLoginFailed(String errorString) {
         //TODO Fail to kakao login
         Log.e("Kakao Login", "Fail to kakao login : " + errorString);
+    }
+
+    // App => WebView
+    private void sendToSnsLoginData(String name, String email) {
+        webView.evaluateJavascript("javascript:sns_login_ok('"+ email +"', '" + name +"', '" + loginResultUrl +"');", null);
     }
 
     private void shareToKakao(String title, String url) {
@@ -341,5 +354,28 @@ private final String URL = "https://menovel.com/app_test.php";
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
+    }
+
+    // App => WebView
+    public void sendToFcmToken() {
+        String fcmToken = SharedPrefUtil.getString(SharedPrefUtil.FCM_TOKEN, "");
+
+        webView.post(new Runnable() {
+            @Override
+            public void run() {
+                webView.evaluateJavascript("javascript:setFcmToken('"+ fcmToken +"');", null);
+            }
+        });
+    }
+    // App => WebView
+    public void sendToReserveTime() {
+        String reserveTime = "2021-08-10 16:38:30";
+
+        webView.post(new Runnable() {
+            @Override
+            public void run() {
+                webView.evaluateJavascript("javascript:setNowDateTime('"+ reserveTime +"');", null);
+            }
+        });
     }
 }
