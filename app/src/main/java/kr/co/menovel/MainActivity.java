@@ -2,8 +2,13 @@ package kr.co.menovel;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
 
+import android.app.AlarmManager;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -42,6 +47,11 @@ import com.kakao.util.KakaoParameterException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
@@ -50,7 +60,9 @@ import kr.co.menovel.component.CustomWebViewClient;
 import kr.co.menovel.kakao.KakaoLoginCallback;
 import kr.co.menovel.kakao.KakaoSessionCallback;
 import kr.co.menovel.kakao.KakaoStoryLink;
+import kr.co.menovel.service.AlarmRecevier;
 import kr.co.menovel.util.AndroidBridge;
+import kr.co.menovel.util.HTTPUtil;
 import kr.co.menovel.util.SharedPrefUtil;
 
 import static kr.co.menovel.util.CommonUtil.finishApp;
@@ -58,8 +70,7 @@ import static kr.co.menovel.util.CommonUtil.showToast;
 
 public class MainActivity extends AppCompatActivity implements KakaoLoginCallback {
 
-//    private final String URL = "https://menovel.com";
-private final String URL = "https://menovel.com/app_test.php";
+    private final String URL = HTTPUtil.ip;
     private WebView webView;
     private RelativeLayout layout_loading;
     private LinearLayout layout_error_page;
@@ -74,6 +85,16 @@ private final String URL = "https://menovel.com/app_test.php";
     private KakaoSessionCallback kakaoSessionCallback;
 
     private String loginResultUrl = "";
+
+    // Property Local Notification
+    private AlarmManager alarmManager;
+    private GregorianCalendar calendar;
+    private NotificationManager notificationManager;
+    NotificationCompat.Builder builder;
+    String reserveTime = "2021-08-17 15:38:30";
+    String title = "예약 푸시 타이틀";
+    String msg = "예약 푸시 테스트";
+    String imgUrl = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,6 +120,11 @@ private final String URL = "https://menovel.com/app_test.php";
 
         initGoogleSignIn();
         kakaoSessionCallback = new KakaoSessionCallback(this);
+
+        notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+        alarmManager = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+        calendar = new GregorianCalendar();
+        Log.e("aaa", calendar.getTime().toString());
     }
 
     @Override
@@ -364,18 +390,57 @@ private final String URL = "https://menovel.com/app_test.php";
             @Override
             public void run() {
                 webView.evaluateJavascript("javascript:setFcmToken('"+ fcmToken +"');", null);
+                sendPush();
             }
         });
     }
     // App => WebView
     public void sendToReserveTime() {
-        String reserveTime = "2021-08-10 16:38:30";
-
         webView.post(new Runnable() {
             @Override
             public void run() {
                 webView.evaluateJavascript("javascript:setNowDateTime('"+ reserveTime +"');", null);
+                setAlarm();
             }
         });
+    }
+    // App => WebView
+    public void sendPush() {
+        String fcmToken = SharedPrefUtil.getString(SharedPrefUtil.FCM_TOKEN, "");
+        String title = "푸시 테스트";
+        String msg = "푸시 테스트 입니다.";
+
+        webView.post(new Runnable() {
+            @Override
+            public void run() {
+                webView.evaluateJavascript("javascript:push_test('"+ fcmToken +"', '" + title + "', '" + msg + "');", null);
+            }
+        });
+    }
+
+    // Get Reserve Time For Local Notification Reg
+    private void requestPushTime() {
+        //TODO request api
+    }
+
+    private void setAlarm() {
+        Intent receiverIntent = new Intent(MainActivity.this, AlarmRecevier.class);
+        receiverIntent.putExtra("title", title);
+        receiverIntent.putExtra("msg", title);
+        receiverIntent.putExtra("img_url", imgUrl);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, receiverIntent, 0);
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date dateTime = null;
+        try {
+            dateTime = dateFormat.parse(reserveTime);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(dateTime);
+
+        alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), pendingIntent);
     }
 }
