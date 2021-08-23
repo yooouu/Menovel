@@ -3,6 +3,7 @@ package kr.co.menovel;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.app.AlarmManager;
 import android.app.NotificationManager;
@@ -10,6 +11,7 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -60,11 +62,17 @@ import kr.co.menovel.component.CustomWebViewClient;
 import kr.co.menovel.kakao.KakaoLoginCallback;
 import kr.co.menovel.kakao.KakaoSessionCallback;
 import kr.co.menovel.kakao.KakaoStoryLink;
+import kr.co.menovel.model.ReservePushData;
+import kr.co.menovel.retrofit.RetrofitClient;
 import kr.co.menovel.service.AlarmRecevier;
 import kr.co.menovel.util.AndroidBridge;
 import kr.co.menovel.util.HTTPUtil;
 import kr.co.menovel.util.SharedPrefUtil;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
+import static kr.co.menovel.util.CommonUtil.SPLASH_TIME;
 import static kr.co.menovel.util.CommonUtil.finishApp;
 import static kr.co.menovel.util.CommonUtil.showToast;
 
@@ -75,6 +83,9 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
     private RelativeLayout layout_loading;
     private LinearLayout layout_error_page;
 
+    private BroadcastReceiver receiver;
+
+    public static final String WEB_LINK_ACTION = "web_link";
     public static boolean isRunning = false;
 
     // Property google login
@@ -91,16 +102,12 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
     private GregorianCalendar calendar;
     private NotificationManager notificationManager;
     NotificationCompat.Builder builder;
-    String reserveTime = "2021-08-17 15:38:30";
-    String title = "예약 푸시 타이틀";
-    String msg = "예약 푸시 테스트";
-    String imgUrl = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        registerReceiver();
         isRunning = true;
 
         webView = findViewById(R.id.webview);
@@ -116,7 +123,13 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
         webView.setWebViewClient(new CustomWebViewClient(webView, layout_loading, layout_error_page));
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
-        webView.loadUrl(URL);
+        String url = getIntent().getStringExtra("url");
+        if (url != null && !url.equals("")) {
+            url = (!url.startsWith("https") ? "https://" : "") + url;
+            webView.loadUrl(url);
+        } else {
+            webView.loadUrl(URL);
+        }
 
         initGoogleSignIn();
         kakaoSessionCallback = new KakaoSessionCallback(this);
@@ -124,36 +137,19 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
         notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
         alarmManager = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
         calendar = new GregorianCalendar();
-        Log.e("aaa", calendar.getTime().toString());
+
+        removeAlarm();
     }
 
     @Override
     public void onBackPressed() {
         if (layout_loading.getVisibility() == View.GONE) {
-            // 사이드 메뉴 Visible 체크
-            webView.evaluateJavascript("javascript:$('#header').hasClass('active')", value -> {
-                try {
-                    boolean sideActive = Boolean.parseBoolean(value);
-                    if (sideActive) {
-                        // 사이드 메뉴 닫기
-                        webView.evaluateJavascript("javascript:$('.dimmed').eq(0).trigger('click')", null);
-                    } else {
-                        String url = webView.getUrl();
-                        if (!webView.canGoBack() || url.endsWith("menovel.com/")) {
-                            finishApp(MainActivity.this);
-                        } else {
-                            webView.goBack();
-                        }
-                    }
-                } catch (Exception e) {
-                    String url = webView.getUrl();
-                    if (!webView.canGoBack() || url.endsWith("menovel.com/")) {
-                        finishApp(MainActivity.this);
-                    } else {
-                        webView.goBack();
-                    }
-                }
-            });
+            String url = webView.getUrl();
+            if (!webView.canGoBack() || url.endsWith("menovel.com/")) {
+                finishApp(MainActivity.this);
+            } else {
+                webView.goBack();
+            }
         }
     }
 
@@ -161,6 +157,7 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
     protected void onDestroy() {
         super.onDestroy();
         isRunning = false;
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
     }
 
     @Override
@@ -294,6 +291,7 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
         webView.evaluateJavascript("javascript:sns_login_ok('"+ email +"', '" + name +"', '" + loginResultUrl +"');", null);
     }
 
+    // 카카오톡 공유하기
     private void shareToKakao(String title, String url) {
         // 기본 텍스트 템플릿 생성
         TextTemplate params = TextTemplate.newBuilder(
@@ -328,7 +326,7 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
             }
         });
     }
-
+    // 카카오스토리 공유하기
     private void shareToKakaoStory(String title, String url) {
         Map<String, Object> urlInfoAndroid = new Hashtable<String, Object>(1);
         urlInfoAndroid.put("title", title);
@@ -353,7 +351,7 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
                 "UTF-8",
                 urlInfoAndroid);
     }
-
+    // 네이버밴드 공유하기
     private void shareToBand(String title, String url) {
         try {
             String decodeURL = URLDecoder.decode(url, "UTF-8");
@@ -371,7 +369,7 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         startActivity(intent);
     }
-
+    // 트위터 공유하기
     private void shareToTwitter(String title, String url) {
         try {
             String sharedText = String.format("http://twitter.com/intent/tweet?text="+ title + "\n%s", URLEncoder.encode(url, "utf-8"));
@@ -382,6 +380,12 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
         }
     }
 
+    // 외부링크 공유하기
+    public void shareToLink(String url) {
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        startActivity(intent);
+    }
+
     // App => WebView
     public void sendToFcmToken() {
         String fcmToken = SharedPrefUtil.getString(SharedPrefUtil.FCM_TOKEN, "");
@@ -390,21 +394,22 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
             @Override
             public void run() {
                 webView.evaluateJavascript("javascript:setFcmToken('"+ fcmToken +"');", null);
-                sendPush();
             }
         });
     }
     // App => WebView
+    // 예약 푸시 시간 설정 테스트용
     public void sendToReserveTime() {
         webView.post(new Runnable() {
             @Override
             public void run() {
-                webView.evaluateJavascript("javascript:setNowDateTime('"+ reserveTime +"');", null);
-                setAlarm();
+                String reserveTime = "2021-08-20 14:50:00";
+                webView.evaluateJavascript("javascript:setReservePushTime('"+ reserveTime +"');", null);
             }
         });
     }
     // App => WebView
+    // 푸시 발송 테스트용
     public void sendPush() {
         String fcmToken = SharedPrefUtil.getString(SharedPrefUtil.FCM_TOKEN, "");
         String title = "푸시 테스트";
@@ -420,27 +425,79 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
 
     // Get Reserve Time For Local Notification Reg
     private void requestPushTime() {
-        //TODO request api
-    }
+        RetrofitClient.getRetrofitApi().getReservePushData().enqueue(new Callback<ReservePushData>() {
+            @Override
+            public void onResponse(Call<ReservePushData> call, Response<ReservePushData> response) {
+                if (response.body() != null) {
+                    String title = response.body().getTitle();
+                    String msg = response.body().getBody();
+                    String sendDate = response.body().getSenddate();
+                    String url = response.body().getUrl();
+                    String imgUrl = response.body().getImg_url();
+                    Log.e("aaa", "title: " + title + " msg: " + msg + " sendDate: " + sendDate + " url: " + url + " img_url: " + imgUrl);
 
-    private void setAlarm() {
+                    setAlarm(title, msg, sendDate, url, imgUrl);
+                } else {
+
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ReservePushData> call, Throwable t) {
+                showToast(R.string.toast_error_server);
+            }
+        });
+    }
+    // 예약 푸시 등록
+    private void setAlarm(String title, String msg, String send_date, String url, String imgUrl) {
         Intent receiverIntent = new Intent(MainActivity.this, AlarmRecevier.class);
         receiverIntent.putExtra("title", title);
-        receiverIntent.putExtra("msg", title);
+        receiverIntent.putExtra("msg", msg);
+        receiverIntent.putExtra("url", url);
         receiverIntent.putExtra("img_url", imgUrl);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, receiverIntent, 0);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 1, receiverIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date dateTime = null;
         try {
-            dateTime = dateFormat.parse(reserveTime);
+            dateTime = dateFormat.parse(send_date);
         } catch (ParseException e) {
             e.printStackTrace();
         }
-
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(dateTime);
 
-        alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), pendingIntent);
+        Calendar nowCalendar = Calendar.getInstance();
+        if (calendar.after(nowCalendar) && nowCalendar.getTime() != calendar.getTime()) {
+            alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), pendingIntent);
+        }
+    }
+    // 등록된 예약 푸시 제거
+    private void removeAlarm() {
+        Intent intent = new Intent(MainActivity.this, AlarmRecevier.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 1, intent, PendingIntent.FLAG_NO_CREATE);
+        if (pendingIntent != null) {
+            alarmManager.cancel(pendingIntent);
+        }
+
+        requestPushTime();
+    }
+
+    private void registerReceiver() {
+        receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                if (action != null && action.equals(WEB_LINK_ACTION)) {
+                    String url = intent.getStringExtra("url");
+                    if (url != null && !url.equals("")) {
+                        url = (!url.startsWith("https") ? "https://" : "") + url;
+                        webView.loadUrl(url);
+                    }
+                }
+            }
+        };
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(receiver, new IntentFilter(WEB_LINK_ACTION));
     }
 }

@@ -42,7 +42,7 @@ public class FCMService extends FirebaseMessagingService {
             String title = msg.containsKey("title") ? msg.get("title") : "미노벨";
             String contents = msg.containsKey("message") ? msg.get("message") : "";
             String img_url = msg.containsKey("img_url") ? msg.get("img_url") : "";
-            String url = msg.containsKey("link") ? msg.get("link") : "";
+            String url = msg.containsKey("url") ? msg.get("url") : "";
 
             Intent intent = new Intent(this, PushReceiveActivity.class);
             intent.putExtra("url", url);
@@ -51,6 +51,7 @@ public class FCMService extends FirebaseMessagingService {
             Bitmap imgBitmap = null;
             if(img_url != null && !img_url.equals("")) {
                 URL imgUrl = new URL(HTTPUtil.ip + img_url);
+//                URL imgUrl = new URL(img_url);
                 URLConnection conn = imgUrl.openConnection();
                 conn.connect();
                 BufferedInputStream bis = new BufferedInputStream(conn.getInputStream());
@@ -72,9 +73,8 @@ public class FCMService extends FirebaseMessagingService {
 
             if (img_url != null && !img_url.equals("")) {
                 mBuilder = new NotificationCompat.Builder(this, getPackageName())
-//                        .setSmallIcon(R.mipmap.app_icon)
-                        .setSmallIcon(R.mipmap.ic_launcher)
-                        .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
+                        .setSmallIcon(R.mipmap.app_icon)
+                        .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.app_icon))
                         .setTicker(title)
                         .setContentTitle(title)
                         .setContentText(contents)
@@ -85,8 +85,8 @@ public class FCMService extends FirebaseMessagingService {
                 mBuilder.setStyle(style);
             } else {
                 mBuilder = new NotificationCompat.Builder(this, getPackageName())
-                        .setSmallIcon(R.mipmap.ic_launcher)
-                        .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
+                        .setSmallIcon(R.mipmap.app_icon)
+                        .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.app_icon))
                         .setTicker(title)
                         .setContentTitle(title)
                         .setContentText(contents)

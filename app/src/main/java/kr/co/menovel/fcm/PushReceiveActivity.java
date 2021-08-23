@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import kr.co.menovel.MainActivity;
 import kr.co.menovel.SplashActivity;
@@ -21,7 +22,10 @@ public class PushReceiveActivity extends AppCompatActivity {
         String url = getIntent().getStringExtra("url");
 
         if (MainActivity.isRunning) {
-            // TODO 푸시 선택 시 페이지 이동이 있을 경우 처리
+            Intent i = new Intent(MainActivity.WEB_LINK_ACTION);
+            i.putExtra("url", url);
+            LocalBroadcastManager.getInstance(this).sendBroadcast(i);
+            finish();
         } else {
             Intent i = new Intent(this, SplashActivity.class);
             i.putExtra("url", url);
