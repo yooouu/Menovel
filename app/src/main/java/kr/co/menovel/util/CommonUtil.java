@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Handler;
 import android.telephony.TelephonyManager;
 import android.view.View;
@@ -108,7 +109,11 @@ public class CommonUtil {
 
         String tmDevice, tmSerial, androidId;
         TelephonyManager tm = (TelephonyManager) act.getSystemService(Context.TELEPHONY_SERVICE);
-        tmDevice = "" + tm.getDeviceId();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            tmDevice = "" + tm.getImei();
+        } else {
+            tmDevice = "" + tm.getDeviceId();
+        }
         tmSerial = "" + tm.getSimSerialNumber();
         androidId = "" + android.provider.Settings.Secure.getString(act.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
         UUID deviceUuid = new UUID(androidId.hashCode(), ((long)tmDevice.hashCode() << 32) | tmSerial.hashCode());
