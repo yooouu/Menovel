@@ -109,11 +109,11 @@ public class CommonUtil {
 
         if (uuid == null) {
             uuid = UUID.randomUUID().toString().replace("-", "");
-            Log.e("UUID", uuid);
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putString("uuid", uuid);
             editor.apply();
         }
+        Log.e("UUID", uuid);
         return uuid;
     }
 }

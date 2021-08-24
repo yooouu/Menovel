@@ -58,6 +58,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
+import kr.co.menovel.component.CustomChromeClient;
 import kr.co.menovel.component.CustomWebViewClient;
 import kr.co.menovel.kakao.KakaoLoginCallback;
 import kr.co.menovel.kakao.KakaoSessionCallback;
@@ -121,6 +122,7 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
         webView.getSettings().setSupportMultipleWindows(true);
         webView.getSettings().setTextZoom(100);
         webView.setWebViewClient(new CustomWebViewClient(webView, layout_loading, layout_error_page));
+        webView.setWebChromeClient(new CustomChromeClient(this));
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
         String url = getIntent().getStringExtra("url");
