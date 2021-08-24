@@ -275,7 +275,6 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
             final String userId = String.valueOf(profile.getId());
             final String name = profile.getKakaoAccount().getProfile().getNickname();
             final String email = String.valueOf(profile.getKakaoAccount().getEmail());
-            Log.e("aaa", "카카오 로그인 아이디 : " + userId + " 카카오 로그인 이메일 : " + email);
 
             // send login data to webView
             sendToSnsLoginData(name, email);
@@ -405,7 +404,7 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
         webView.post(new Runnable() {
             @Override
             public void run() {
-                String reserveTime = "2021-08-20 14:50:00";
+                String reserveTime = "2021-08-24 18:13:00";
                 webView.evaluateJavascript("javascript:setReservePushTime('"+ reserveTime +"');", null);
             }
         });

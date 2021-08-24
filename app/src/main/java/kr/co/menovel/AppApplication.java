@@ -13,12 +13,16 @@ public class AppApplication extends Application {
     private static AppApplication instance;
     private static Context context;
 
+    private Boolean isBackground = false;
+
     @Override
     public void onCreate() {
         super.onCreate();
 
         instance = this;
         context = getApplicationContext();
+
+        Foreground.init(this);
 
         SharedPrefUtil.init(this);
 

@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
+import android.os.StrictMode;
 
 import androidx.core.app.NotificationCompat;
 
@@ -19,7 +20,14 @@ import com.google.firebase.messaging.RemoteMessage;
 import java.io.BufferedInputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.Map;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import kr.co.menovel.R;
 import kr.co.menovel.util.HTTPUtil;
@@ -50,13 +58,27 @@ public class FCMService extends FirebaseMessagingService {
 
             Bitmap imgBitmap = null;
             if(img_url != null && !img_url.equals("")) {
-                URL imgUrl = new URL(HTTPUtil.ip + img_url);
-//                URL imgUrl = new URL(img_url);
-                URLConnection conn = imgUrl.openConnection();
+                TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
+
+                    public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                    }
+
+                    public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                    }
+                }};
+                SSLContext sc = SSLContext.getInstance("SSL");
+                sc.init(null, trustAllCerts, new SecureRandom());
+                HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+//                URL imgUrl = new URL(HTTPUtil.ip + img_url);
+                URL imgUrl = new URL(img_url);
+                HttpsURLConnection conn = (HttpsURLConnection) imgUrl.openConnection();
                 conn.connect();
                 BufferedInputStream bis = new BufferedInputStream(conn.getInputStream());
                 imgBitmap = BitmapFactory.decodeStream(bis);
-                bis.close();
             }
 
             // 오레오 버전
