@@ -249,13 +249,14 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
 
+            String id = account.getId();
             String email = account.getEmail();
             String familyName = account.getFamilyName();
             String givenName = account.getGivenName();
             String displayName = account.getDisplayName();
 
             // Send google login data to webView
-            sendToSnsLoginData(displayName, email);
+            sendToSnsLoginData(displayName, email, id);
 
         } catch (ApiException e) {
             showToast(R.string.toast_error_server);
@@ -277,7 +278,7 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
             final String email = String.valueOf(profile.getKakaoAccount().getEmail());
 
             // send login data to webView
-            sendToSnsLoginData(name, email);
+            sendToSnsLoginData(name, email, userId);
         }
     }
 
@@ -288,8 +289,8 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
     }
 
     // App => WebView
-    private void sendToSnsLoginData(String name, String email) {
-        webView.evaluateJavascript("javascript:sns_login_ok('"+ email +"', '" + name +"', '" + loginResultUrl +"');", null);
+    private void sendToSnsLoginData(String name, String email, String id) {
+        webView.evaluateJavascript("javascript:sns_login_ok('"+ id +"','"+ email +"', '" + name +"', '" + loginResultUrl +"');", null);
     }
 
     // 카카오톡 공유하기
