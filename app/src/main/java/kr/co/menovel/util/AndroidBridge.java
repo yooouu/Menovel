@@ -42,4 +42,9 @@ public class AndroidBridge {
     public void getNowDateTime() {
         act.sendToReserveTime();
     }
+
+//    @JavascriptInterface
+//    public void purchaseInApp(int index, String sku) {
+//        act.purchaseInApp(index, sku);
+//    }
 }

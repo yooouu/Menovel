@@ -25,6 +25,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -66,6 +67,7 @@ import kr.co.menovel.kakao.KakaoStoryLink;
 import kr.co.menovel.model.ReservePushData;
 import kr.co.menovel.retrofit.RetrofitClient;
 import kr.co.menovel.service.AlarmRecevier;
+import kr.co.menovel.service.BillingService;
 import kr.co.menovel.util.AndroidBridge;
 import kr.co.menovel.util.HTTPUtil;
 import kr.co.menovel.util.SharedPrefUtil;
@@ -83,6 +85,8 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
     private WebView webView;
     private RelativeLayout layout_loading;
     private LinearLayout layout_error_page;
+
+    private BillingService billingService;
 
     private BroadcastReceiver receiver;
 
@@ -121,6 +125,8 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
         webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
         webView.getSettings().setSupportMultipleWindows(true);
         webView.getSettings().setTextZoom(100);
+        String userAgent = webView.getSettings().getUserAgentString();
+        webView.getSettings().setUserAgentString(userAgent + "menovel_and");
         webView.setWebViewClient(new CustomWebViewClient(webView, layout_loading, layout_error_page));
         webView.setWebChromeClient(new CustomChromeClient(this));
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
@@ -133,6 +139,7 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
             webView.loadUrl(URL);
         }
 
+//        billingService = new BillingService(this);
         initGoogleSignIn();
         kakaoSessionCallback = new KakaoSessionCallback(this);
 
@@ -388,6 +395,11 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
         startActivity(intent);
     }
 
+    // 인앱 구매 처리
+    public void purchaseInApp(int index, String sku) {
+        billingService.purchase(index, sku);
+    }
+
     // App => WebView
     public void sendToFcmToken() {
         String fcmToken = SharedPrefUtil.getString(SharedPrefUtil.FCM_TOKEN, "");
@@ -399,6 +411,17 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
             }
         });
     }
+    // App => WebView
+    // 인앱결제 영수증 데이터 전송
+//    public void sendToResultInApp(String data) {
+//        webView.post(new Runnable() {
+//            @Override
+//            public void run() {
+//                webView.evaluateJavascript("javascript:resultInApp('"+ data +"');", null);
+//            }
+//        });
+//    }
+
     // App => WebView
     // 예약 푸시 시간 설정 테스트용
     public void sendToReserveTime() {

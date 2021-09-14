@@ -5,12 +5,13 @@
 
     <queries>
         <package android:name="com.kakao.talk" />
-        <package android:name="com.kakao.story"/>
-        <package android:name="com.nhn.android.band"/>
+        <package android:name="com.kakao.story" />
+        <package android:name="com.nhn.android.band" />
     </queries>
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+<!--    <uses-permission android:name="android.permission.READ_PHONE_STATE" />-->
+<!--    <uses-permission android:name="android.permission.READ_CONTACTS"/>-->
 
     <application
         android:name=".AppApplication"
@@ -23,6 +24,7 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         tools:ignore="LockedOrientationActivity">
+        <activity android:name=".ContactsActivity"></activity>
         <activity
             android:name=".SplashActivity"
             android:screenOrientation="portrait">
@@ -38,22 +40,23 @@
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:host="kakaostory"
-                    android:scheme="@string/kakao_scheme"/>
+                <data
+                    android:host="kakaostory"
+                    android:scheme="@string/kakao_scheme" />
             </intent-filter>
         </activity>
         <activity
             android:name=".fcm.PushReceiveActivity"
             android:excludeFromRecents="true"
-            android:launchMode="singleInstance"/>
+            android:launchMode="singleInstance" />
 
         <meta-data
             android:name="com.kakao.sdk.AppKey"
             android:value="@string/kakao_app_key" />
-
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@mipmap/app_icon" />
@@ -67,11 +70,12 @@
             </intent-filter>
         </service>
 
-        <receiver android:name=".service.AlarmRecevier"
+        <receiver
+            android:name=".service.AlarmRecevier"
             android:enabled="true"
             android:exported="false">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
     </application>

@@ -69,15 +69,16 @@ public class SplashActivity extends AppCompatActivity {
     private void requestPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // 권한을 획득하지 않았다면
-            if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{
-                                Manifest.permission.READ_PHONE_STATE
-                        },
-                        123);
-            } else {
-                startApp();
-            }
+//            if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+//                ActivityCompat.requestPermissions(this,
+//                        new String[]{
+//                                Manifest.permission.READ_PHONE_STATE
+//                        },
+//                        123);
+//            } else {
+//                startApp();
+//            }
+            startApp();
         }else{
             startApp();
         }

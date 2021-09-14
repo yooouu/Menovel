@@ -1,11 +1,14 @@
 package kr.co.menovel.retrofit;
 
+import java.util.Map;
+
 import kr.co.menovel.model.ReservePushData;
 import retrofit2.Call;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.QueryMap;
 
 public interface RetrofitApi {
     @FormUrlEncoded
@@ -16,4 +19,7 @@ public interface RetrofitApi {
 
     @GET("/api/reservePushInfo.php")
     Call<ReservePushData> getReservePushData();
+
+    @POST("/api/app/intf")
+    Call<String> setInappResult(@QueryMap Map<String, Object> dataMap);
 }
