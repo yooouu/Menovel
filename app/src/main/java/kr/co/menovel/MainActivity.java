@@ -2,9 +2,11 @@ package kr.co.menovel;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import android.Manifest;
 import android.app.AlarmManager;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -14,11 +16,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.webkit.ValueCallback;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.LinearLayout;
@@ -90,11 +94,12 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
 
     private BroadcastReceiver receiver;
 
+    public static final int FILE_CHOOSER_REQ_CODE = 1;
     public static final String WEB_LINK_ACTION = "web_link";
     public static boolean isRunning = false;
 
     // Property google login
-    public static final int RC_SIGN_IN = 1;
+    public static final int RC_SIGN_IN = 2;
     private GoogleSignInClient googleSignInClient;
 
     // Property kakao login
@@ -107,6 +112,9 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
     private GregorianCalendar calendar;
     private NotificationManager notificationManager;
     NotificationCompat.Builder builder;
+
+    private ValueCallback<Uri[]> filePathCallback;
+    private Uri cameraImageUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -171,6 +179,24 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case FILE_CHOOSER_REQ_CODE: // 파일 선택 결과처리
+                if (filePathCallback == null) return;
+                if (resultCode == RESULT_OK) {
+                    if (data == null) {
+                        data = new Intent();
+                    }
+                    if (data.getData() == null) {
+                        data.setData(cameraImageUri);
+                    }
+                    filePathCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data));
+                    filePathCallback = null;
+                } else {
+                    filePathCallback.onReceiveValue(null);
+                    filePathCallback = null;
+                }
+                break;
+        }
         super.onActivityResult(requestCode, resultCode, data);
 
         if (kakaoSessionCallback != null) {
@@ -183,6 +209,26 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             handleSignInResult(task);
         }
+    }
+
+    // 권한 체크
+    public boolean requestPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // 권한을 획득하지 않았다면
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+                    checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+                    checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{
+                                Manifest.permission.READ_EXTERNAL_STORAGE,
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                Manifest.permission.CAMERA,
+                        },
+                        123);
+                return false;
+            }
+        }
+        return true;
     }
 
     public void onClick(View v) {
@@ -524,5 +570,18 @@ public class MainActivity extends AppCompatActivity implements KakaoLoginCallbac
         };
 
         LocalBroadcastManager.getInstance(this).registerReceiver(receiver, new IntentFilter(WEB_LINK_ACTION));
+    }
+
+    public ValueCallback<Uri[]> getFilePathCallback() {
+        return filePathCallback;
+    }
+    public void setFilePathCallback(ValueCallback<Uri[]> filePathCallback) {
+        this.filePathCallback = filePathCallback;
+    }
+    public Uri getCameraImageUri() {
+        return cameraImageUri;
+    }
+    public void setCameraImageUri(Uri cameraImageUri) {
+        this.cameraImageUri = cameraImageUri;
     }
 }

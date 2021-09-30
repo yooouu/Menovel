@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -33,7 +34,9 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import static android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS;
 import static kr.co.menovel.util.CommonUtil.SPLASH_TIME;
+import static kr.co.menovel.util.CommonUtil.permissionResultCallBack;
 import static kr.co.menovel.util.CommonUtil.showToast;
 
 public class SplashActivity extends AppCompatActivity {
@@ -56,7 +59,9 @@ public class SplashActivity extends AppCompatActivity {
             }
         };
 
-        requestPermission();
+        if (requestPermission()) {
+            startApp();
+        }
 //        getKeyHash(this);
     }
 
@@ -66,50 +71,53 @@ public class SplashActivity extends AppCompatActivity {
         finish();
     }
 
-    private void requestPermission() {
+    private boolean requestPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // 권한을 획득하지 않았다면
-//            if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-//                ActivityCompat.requestPermissions(this,
-//                        new String[]{
-//                                Manifest.permission.READ_PHONE_STATE
-//                        },
-//                        123);
-//            } else {
-//                startApp();
-//            }
-            startApp();
-        }else{
-            startApp();
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+                    checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+                    checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{
+                                Manifest.permission.READ_EXTERNAL_STORAGE,
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                Manifest.permission.CAMERA,
+                        },
+                        123);
+                return false;
+            }
         }
+        return true;
     }
 
     //권한체크 후
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        boolean isGranted = false;
-        for (int result : grantResults) {
-            if (!(isGranted = (result == PackageManager.PERMISSION_GRANTED))) {
-                break;
-            }
-        }
-        if (grantResults.length == 0 || !isGranted) {
+        final CommonUtil.PermissionCheck permissionCheck = permissionResultCallBack(this, requestCode, permissions, grantResults);
+
+        if (permissionCheck == CommonUtil.PermissionCheck.PERMISSION_DENY || permissionCheck == CommonUtil.PermissionCheck.PERMISSION_N) {
             final ConfirmDialog dialog = new ConfirmDialog(this);
             dialog.setTitle(R.string.dialog_permission_title);
             dialog.setContent(R.string.dialog_permission_content);
-            dialog.setBtnCancelText(R.string.finish);
             dialog.setConfirmListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    requestPermission();
                     dialog.dismiss();
+                    if (permissionCheck == CommonUtil.PermissionCheck.PERMISSION_DENY) {
+                        Intent intent = new Intent(ACTION_APPLICATION_DETAILS_SETTINGS);
+                        intent.setData(Uri.parse("package:" + BuildConfig.APPLICATION_ID));
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+                        startActivityForResult(intent, 123);
+                    } else {
+                        requestPermission();
+                    }
                 }
             });
             dialog.setCancelListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    finishAffinity();
+                    finish();
                 }
             });
             dialog.show();
